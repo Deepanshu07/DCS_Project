@@ -50,7 +50,7 @@ class ThreadClass extends Thread
 	 			if(idx==0||idx==1)
 		 			query += bookname[idx1] + Integer.toString(val);	
 	 			else if (idx==2)
-                    query += "chu chut 1234567890123 400 1 library123";  
+                    query += "ka ki 1234567890123 400 1 library123";  
  			 	else
  			 		query += bookname[idx1];
 

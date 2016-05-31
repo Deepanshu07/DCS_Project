@@ -18,6 +18,7 @@ class ServerThread extends Thread
     	private Thread t;
        private Socket socket;
        private String threadName;
+       //private final ReentrantLock l = new ReentrantLock();
        
        ServerThread(String name, Socket socket){
        		threadName=name;
@@ -37,52 +38,58 @@ class ServerThread extends Thread
                 InputStreamReader isr1=new InputStreamReader(fin1);
                 BufferedReader br1= new BufferedReader(isr1);
 
-                String line1;
+                String line1=null;
                 int flag=0;
-                outer:
-                while((line1=br1.readLine())!=null)                                //handle whiles till null condition
+                synchronized(ServerThread.class)
                 {
-                    String[] wrds=line1.split(" ");
-                    if(wrds[1].equals(book))                                        //could use threads for each search
+                    outer:
+                    while((line1=br1.readLine())!=null)                                //handle whiles till null condition
                     {
-                        flag=1;
-                        int available=Integer.parseInt(wrds[3]);
-                        //check if the book is available
-                        if(available>=1)
+                        //System.out.println("hello"+threadName);
+                        String[] wrds=line1.split(" ");
+                        if(wrds[1].equals(book))                                        //could use threads for each search
                         {
-                            flag=2;
-                            int price=Integer.parseInt(wrds[4]);
-                            InputStream fin2= new FileInputStream("members.txt");
-                            InputStreamReader isr2= new InputStreamReader(fin2);
-                            BufferedReader br2= new BufferedReader(isr2);
-                            String line2;
-                            while((line2=br2.readLine())!=null)
+                            //System.out.println("hello"+threadName);
+                            flag=1;
+                            int available=Integer.parseInt(wrds[3]);
+                            //check if the book is available
+                            if(available>=1)
                             {
-                                String[] w=line2.split(" ");
-                                //check if the memberID is valid
-                                if(w[0].equals(memberID))
+                               // System.out.println("hello"+threadName);
+                                flag=2;
+                                int price=Integer.parseInt(wrds[4]);
+                                InputStream fin2= new FileInputStream("members.txt");
+                                InputStreamReader isr2= new InputStreamReader(fin2);
+                                BufferedReader br2= new BufferedReader(isr2);
+                                String line2;
+                                while((line2=br2.readLine())!=null)
                                 {
-                                    flag=3;
-                                    int balance=Integer.parseInt(w[2]);
-                                    int booksIssued=Integer.parseInt(w[3]);
-                                    //check if sufficient balance and max limit of issues not reached
-                                    if((float)balance>= (price*0.1)&&booksIssued<3)
+                                    //System.out.println("hello"+threadName);
+                                    String[] w=line2.split(" ");
+                                    //check if the memberID is valid
+                                    if(w[0].equals(memberID))
                                     {
-                                        flag=4;
-                                        //update books.txt
-                                        String oldFileName = "books.txt";
-                                        String tmpFileName = "books_temp.txt";
-
-                                        File f = new File(tmpFileName);
-                                        f.createNewFile();
-
-                                        BufferedReader br3 = null;
-                                        BufferedWriter bw3 = null;
-                                        br3 = new BufferedReader(new FileReader(oldFileName));
-                                        bw3 = new BufferedWriter(new FileWriter(f));
-                                        String l;
-                                        synchronized(this)
+                                        //System.out.println("hello"+threadName);
+                                        flag=3;
+                                        int balance=Integer.parseInt(w[2]);
+                                        int booksIssued=Integer.parseInt(w[3]);
+                                        //check if sufficient balance and max limit of issues not reached
+                                        if((float)balance>= (price*0.1)&&booksIssued<3)
                                         {
+                                            //System.out.println("hello"+threadName);
+                                            flag=4;
+                                            //update books.txt
+                                            String oldFileName = "books.txt";
+                                            String tmpFileName = "books_temp.txt";
+
+                                            File f = new File(tmpFileName);
+                                            f.createNewFile();
+
+                                            BufferedReader br3 = null;
+                                            BufferedWriter bw3 = null;
+                                            br3 = new BufferedReader(new FileReader(oldFileName));
+                                            bw3 = new BufferedWriter(new FileWriter(f));
+                                            String l;
                                             while ((l = br3.readLine()) != null) 
                                             {
                                                 String[] w1=l.split(" ");
@@ -101,19 +108,15 @@ class ServerThread extends Thread
 
                                             File newFile = new File(tmpFileName);
                                             newFile.renameTo(oldFile);
-                                        }
+                                            //update members.txt
+                                            oldFileName = "members.txt";
+                                            tmpFileName = "members_temp.txt";
 
-                                        //update members.txt
-                                        oldFileName = "members.txt";
-                                        tmpFileName = "members_temp.txt";
+                                            f = new File(tmpFileName);
+                                            f.createNewFile();
 
-                                        f = new File(tmpFileName);
-                                        f.createNewFile();
-
-                                        br3 = new BufferedReader(new FileReader(oldFileName));
-                                        bw3 = new BufferedWriter(new FileWriter(f));
-                                        synchronized(this)
-                                        {
+                                            br3 = new BufferedReader(new FileReader(oldFileName));
+                                            bw3 = new BufferedWriter(new FileWriter(f));
                                             while ((l = br3.readLine()) != null) 
                                             {
                                                 String[] w1=l.split(" ");
@@ -133,39 +136,39 @@ class ServerThread extends Thread
                                                 bw3.write(l+"\n");
                                                 bw3.flush();
                                             }                 
-                                            File oldFile = new File(oldFileName);
+                                            oldFile = new File(oldFileName);
                                             oldFile.delete();
 
-                                            File newFile = new File(tmpFileName);
+                                            newFile = new File(tmpFileName);
                                             newFile.renameTo(oldFile);
-                                        }
-                                        //Make new entry in issued.txt file
-                                        File issued=new File("issued.txt");
-                                        if(!issued.exists())
-                                        {
-                                            issued.createNewFile();
-                                        }
-                                        bw3 = new BufferedWriter(new FileWriter(issued,true));
+                                            
+                                            //Make new entry in issued.txt file
+                                            File issued=new File("issued.txt");
+                                            if(!issued.exists())
+                                            {
+                                                issued.createNewFile();
+                                            }
+                                            bw3 = new BufferedWriter(new FileWriter(issued,true));
 
-                                        Date date = new Date();
-                                        SimpleDateFormat df2 = new SimpleDateFormat("dd/MMM/yyyy");
-                                        String dateText = df2.format(date);
-                                        l=w[0]+" "+wrds[1]+" "+dateText;
-                                        synchronized(this)
-                                        {
-                                        	bw3.write(l+"\n");
-                                        	bw3.flush();
+                                            Date date = new Date();
+                                            SimpleDateFormat df2 = new SimpleDateFormat("dd/MM/yyyy");
+                                            String dateText = df2.format(date);
+                                            l=w[0]+" "+wrds[1]+" "+dateText;
+                                           	bw3.write(l+"\n");
+                                            bw3.flush();
+
+                                            break outer;
                                         }
 
-                                        break outer;
                                     }
 
                                 }
-
                             }
                         }
+                        
                     }
                 }
+                
                 if (flag==0) {
                     returnMessage="There is no such book in the library\n";
                 }
@@ -201,6 +204,8 @@ class ServerThread extends Thread
                 //returnMessage="Return Request\n";
 
                 //no.of copies++ delete from issue member isuued book++
+                synchronized(ServerThread.class)
+                {
                 InputStream fin1= new FileInputStream("issued.txt");
                 InputStreamReader isr1= new InputStreamReader(fin1);
                 BufferedReader br1= new BufferedReader(isr1);
@@ -212,30 +217,31 @@ class ServerThread extends Thread
                 BufferedWriter bw1 = null;
                 bw1 = new BufferedWriter(new FileWriter(f1));
                 int flag=0;
-                while((line1=br1.readLine())!=null)
-                {
-                    String[] wrds=line1.split(" ");
-                    //have to change this condition
-                    if (wrds[0].equals(memberID) && wrds[1].equals(book))  
+                
+                    while((line1=br1.readLine())!=null)
                     {
-                    	flag=1;
-                        //delete this record in issued.txt
-                        InputStream fin2=new FileInputStream("books.txt");
-                        InputStreamReader isr2=new InputStreamReader(fin2);
-                        BufferedReader br2= new BufferedReader(isr2);
-                        String line2;
-                        String tmpFileName2 = "books_tmp.txt";
-                        File f2 = new File(tmpFileName2);
-                        f2.createNewFile();
-                        BufferedWriter bw2 = null;
-                        bw2 = new BufferedWriter(new FileWriter(f2));
-
-                        synchronized(this)
+                        System.out.println("hello"+threadName);
+                        String[] wrds=line1.split(" ");
+                        //have to change this condition
+                        if (wrds[0].equals(memberID) && wrds[1].equals(book)&&flag==0)  
                         {
-                            while((line2=br2.readLine())!=null)                                //handle whiles till null condition
+                            System.out.println("hello"+threadName);
+                        	flag=1;
+                            //delete this record in issued.txt
+                            InputStream fin2=new FileInputStream("books.txt");
+                            InputStreamReader isr2=new InputStreamReader(fin2);
+                            BufferedReader br2= new BufferedReader(isr2);
+                            String line2;
+                            String tmpFileName2 = "books_tmp.txt";
+                            File f2 = new File(tmpFileName2);
+                            f2.createNewFile();
+                            BufferedWriter bw2 = null;
+                            bw2 = new BufferedWriter(new FileWriter(f2));
+
+                     	    while((line2=br2.readLine())!=null)                                
                             {
                                 String[] w1=line2.split(" ");
-                                if(w1[1].equals(book))                                        //could use threads for each search
+                                if(w1[1].equals(book))                                        
                                 {
                                     int num1=Integer.parseInt(w1[3]);
                                     num1++;
@@ -251,24 +257,27 @@ class ServerThread extends Thread
 
                             File newFile2 = new File(tmpFileName2);
                             newFile2.renameTo(oldFile2);
-                        }
-                        InputStream fin3= new FileInputStream("members.txt");
-                        InputStreamReader isr3= new InputStreamReader(fin3);
-                        BufferedReader br3= new BufferedReader(isr3);
-                        String line3;
-                        String tmpFileName3 = "members_tmp.txt";
-                        File f3 = new File(tmpFileName3);
-                        f3.createNewFile();
-                        BufferedWriter bw3 = null;
-                        bw3 = new BufferedWriter(new FileWriter(f3));
 
-                        synchronized(this)
-                        {
-                            while((line3=br3.readLine())!=null)                                //handle whiles till null condition
+                            System.out.println("hello"+threadName);
+
+                            InputStream fin3= new FileInputStream("members.txt");
+                            InputStreamReader isr3= new InputStreamReader(fin3);
+                            BufferedReader br3= new BufferedReader(isr3);
+                            String line3;
+                            String tmpFileName3 = "members_tmp.txt";
+                            File f3 = new File(tmpFileName3);
+                            f3.createNewFile();
+                            BufferedWriter bw3 = null;
+                            bw3 = new BufferedWriter(new FileWriter(f3));
+
+                            System.out.println("hello"+threadName);
+
+                            while((line3=br3.readLine())!=null)                                
                             {
                                 String[] w1=line3.split(" ");
-                                if(w1[0].equals(memberID))                                        //could use threads for each search
+                                if(w1[0].equals(memberID))                                        
                                 {
+                                    System.out.println("hello"+threadName);
                                     int num1=Integer.parseInt(w1[3]);
                                     num1--;
                                     String snum = Integer.toString(num1);
@@ -284,22 +293,20 @@ class ServerThread extends Thread
                             File newFile3 = new File(tmpFileName3);
                             newFile3.renameTo(oldFile3);
                         }
+                        else
+                        {
+                            bw1.write(line1+"\n");                       
+                            bw1.flush();
+                            System.out.println(line1);
+                        }
+                    }
+                    if (flag==0) {
+                    	returnMessage="This book hasn't been issued by this member\n";
                     }
                     else
                     {
-                        bw1.write(line1+"\n");                       //check again
-                        bw1.flush();
+                    	returnMessage="Book successfully returned\n";
                     }
-                }
-                if (flag==0) {
-                	returnMessage="This book hasn't been issued by this member\n";
-                }
-                else
-                {
-                	returnMessage="Book successfully returned\n";
-                }
-                synchronized(this)
-                {
                     File oldFile1 = new File("issued.txt");
                     oldFile1.delete();
 
@@ -344,26 +351,26 @@ class ServerThread extends Thread
                         InputStreamReader isr1=new InputStreamReader(fin1);
                         BufferedReader br1= new BufferedReader(isr1);
 
-                        while((line2=br1.readLine())!=null)
+                        synchronized(ServerThread.class)
                         {
-                            String w[]=line2.split(" ");
-                            if(w[1].equals(title))
+                            while((line2=br1.readLine())!=null)
                             {
-                                flag=2;
-
-                                String oldFileName = "books.txt";
-                                String tmpFileName = "books_temp.txt";
-
-                                File f = new File(tmpFileName);
-                                f.createNewFile();
-
-                                BufferedReader br3 = null;
-                                BufferedWriter bw3 = null;
-                                br3 = new BufferedReader(new FileReader(oldFileName));
-                                bw3 = new BufferedWriter(new FileWriter(f));
-                                String l;
-                                synchronized(this)
+                                String w[]=line2.split(" ");
+                                if(w[1].equals(title))
                                 {
+                                    flag=2;
+
+                                    String oldFileName = "books.txt";
+                                    String tmpFileName = "books_temp.txt";
+
+                                    File f = new File(tmpFileName);
+                                    f.createNewFile();
+
+                                    BufferedReader br3 = null;
+                                    BufferedWriter bw3 = null;
+                                    br3 = new BufferedReader(new FileReader(oldFileName));
+                                    bw3 = new BufferedWriter(new FileWriter(f));
+                                    String l;
                                     while ((l = br3.readLine()) != null) 
                                     {
                                         String[] w1=l.split(" ");
@@ -382,15 +389,12 @@ class ServerThread extends Thread
 
                                     File newFile = new File(tmpFileName);
                                     newFile.renameTo(oldFile);
+                                    break;
                                 }
-                                break;
                             }
-                        }
-                        if (flag==1)
-                        {
-                            File fbook=new File("books.txt");
-                            synchronized(this)
+                            if (flag==1)
                             {
+                                File fbook=new File("books.txt");
                             	if(!fbook.exists())
                             	{
                                 	fbook.createNewFile();
@@ -399,21 +403,20 @@ class ServerThread extends Thread
 
                                 String l=isbn+" "+title+" "+author+" "+1+" "+price;
                                 bw3.write(l+"\n");
-                                bw3.flush();
-                            }   
-                        }
+                                bw3.flush();   
+                            }
+                        
 
-                        String oldFileName = "admins.txt";
-                        String tmpFileName = "admins_temp.txt";
+                            String oldFileName = "admins.txt";
+                            String tmpFileName = "admins_temp.txt";
 
-                        File f = new File(tmpFileName);
-                        f.createNewFile();
+                            File f = new File(tmpFileName);
+                            f.createNewFile();
 
-                        BufferedReader br3 = new BufferedReader(new FileReader(oldFileName));
-                        BufferedWriter bw3 = new BufferedWriter(new FileWriter(f));
-                        String l;
-                        synchronized(this)
-                        {
+                            BufferedReader br3 = new BufferedReader(new FileReader(oldFileName));
+                            BufferedWriter bw3 = new BufferedWriter(new FileWriter(f));
+                            String l;
+                        
                             while ((l = br3.readLine()) != null) 
                             {
                                 String[] w1=l.split(" ");
@@ -545,7 +548,7 @@ class ServerThread extends Thread
        
        public void start ()
        {
-          System.out.println("Starting processing a request");
+          //System.out.println("Starting processing a request");
           if (t == null)
           {
              t = new Thread (this, threadName);
@@ -556,7 +559,6 @@ class ServerThread extends Thread
  
 public class server
 {
- 
     private static Socket socket;
  
     public static void main(String[] args)
