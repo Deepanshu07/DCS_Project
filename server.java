@@ -18,12 +18,11 @@ class ServerThread extends Thread
     	private Thread t;
        private Socket socket;
        private String threadName;
-       //private final ReentrantLock l = new ReentrantLock();
        
        ServerThread(String name, Socket socket){
        		threadName=name;
            this.socket=socket;
-           //System.out.println("Creating ");
+           
        }
        public String issueFunc(String[] words)
        {
@@ -32,7 +31,7 @@ class ServerThread extends Thread
        		{
        			String book=words[1];
                 String memberID=words[2];
-                //System.out.println(book+" "+memberID);
+                
 
                 InputStream fin1=new FileInputStream("books.txt");
                 InputStreamReader isr1=new InputStreamReader(fin1);
@@ -43,19 +42,19 @@ class ServerThread extends Thread
                 synchronized(ServerThread.class)
                 {
                     outer:
-                    while((line1=br1.readLine())!=null)                                //handle whiles till null condition
+                    while((line1=br1.readLine())!=null)                                
                     {
-                        //System.out.println("hello"+threadName);
+                        
                         String[] wrds=line1.split(" ");
-                        if(wrds[1].equals(book))                                        //could use threads for each search
+                        if(wrds[1].equals(book))                                        
                         {
-                            //System.out.println("hello"+threadName);
+                            
                             flag=1;
                             int available=Integer.parseInt(wrds[3]);
-                            //check if the book is available
+                            
                             if(available>=1)
                             {
-                               // System.out.println("hello"+threadName);
+                               
                                 flag=2;
                                 int price=Integer.parseInt(wrds[4]);
                                 InputStream fin2= new FileInputStream("members.txt");
@@ -64,19 +63,19 @@ class ServerThread extends Thread
                                 String line2;
                                 while((line2=br2.readLine())!=null)
                                 {
-                                    //System.out.println("hello"+threadName);
+                                    
                                     String[] w=line2.split(" ");
                                     //check if the memberID is valid
                                     if(w[0].equals(memberID))
                                     {
-                                        //System.out.println("hello"+threadName);
+                                        
                                         flag=3;
                                         int balance=Integer.parseInt(w[2]);
                                         int booksIssued=Integer.parseInt(w[3]);
                                         //check if sufficient balance and max limit of issues not reached
                                         if((float)balance>= (price*0.1)&&booksIssued<3)
                                         {
-                                            //System.out.println("hello"+threadName);
+                                           
                                             flag=4;
                                             //update books.txt
                                             String oldFileName = "books.txt";
@@ -199,9 +198,6 @@ class ServerThread extends Thread
        		{
        			String book=words[1];
                 String memberID=words[2];
-                //System.out.println(book+" "+memberID);
-
-                //returnMessage="Return Request\n";
 
                 //no.of copies++ delete from issue member isuued book++
                 synchronized(ServerThread.class)
@@ -490,9 +486,12 @@ class ServerThread extends Thread
 		{
 			try
 			{
-				InputStream is = socket.getInputStream();               //reads input in bytes
-                InputStreamReader isr = new InputStreamReader(is);      //maps bytes to charcacter one at a time
-                BufferedReader br = new BufferedReader(isr);                       //to read entire line into buffer so that wont have to do I/O for each charcater
+                //reads input in bytes
+				InputStream is = socket.getInputStream();    
+                //maps bytes to charcacter one at a time           
+                InputStreamReader isr = new InputStreamReader(is);
+                //to read entire line into buffer so that wont have to do I/O for each charcater      
+                BufferedReader br = new BufferedReader(isr);                       
                 String query = br.readLine();
                 System.out.println("Message received from client is: "+query);
  		
@@ -532,18 +531,6 @@ class ServerThread extends Thread
     		{
         		e.printStackTrace();
     		}
-
-          /*System.out.println("Running " +  threadName );
-          try {
-             for(int i = 4; i > 0; i--) {
-                System.out.println("Thread: " + threadName + ", " + i);
-                // Let the thread sleep for a while.
-                Thread.sleep(50);
-             }
-         } catch (InterruptedException e) {
-             System.out.println("Thread " +  threadName + " interrupted.");
-         }
-         System.out.println("Thread " +  threadName + " exiting.");*/
        }
        
        public void start ()
@@ -566,10 +553,10 @@ public class server
         try
         {
  
-            int port = 25000,i=0;                                                               //make program menu driven
+            int port = 25000,i=0;                                                             
             ServerSocket serverSocket = new ServerSocket(port);
             System.out.println("Server Started and listening to the port 25000");
- 			ServerThread[] th=new ServerThread[101];  
+ 			ServerThread[] th=new ServerThread[800];  
             //server is always running
             while(true)
             {
